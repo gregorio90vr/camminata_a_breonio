@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Garibaldi della Lessinia - Strada Bresciana → Breonio</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #1a2f23;
+  }
+  #header {
+    background: linear-gradient(135deg, #2d5738 0%, #1a3b26 100%);
+    color: #f5f1e6;
+    padding: 18px 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    z-index: 1000;
+    position: relative;
+  }
+  #header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  #header p {
+    font-size: 13px;
+    color: #c9dcc4;
+    margin-top: 4px;
+  }
+  #stats {
+    display: flex;
+    gap: 18px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .stat {
+    background: rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  .stat b {
+    display: block;
+    font-size: 15px;
+    color: #e8b34f;
+  }
+  #map {
+    height: calc(100vh - 128px);
+    width: 100%;
+  }
+  @media (max-width: 600px) {
+    #map { height: calc(100vh - 168px); }
+    #header h1 { font-size: 17px; }
+  }
+  .leaflet-popup-content-wrapper {
+    border-radius: 10px;
+    background: #fdfcf7;
+  }
+  .popup-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a3b26;
+    margin-bottom: 4px;
+  }
+  .popup-quota {
+    display: inline-block;
+    background: #e8b34f;
+    color: #1a2f23;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-bottom: 6px;
+  }
+  .popup-time {
+    font-size: 11px;
+    color: #7a7a7a;
+    margin-bottom: 6px;
+  }
+  .popup-notes {
+    font-size: 12.5px;
+    color: #333;
+    line-height: 1.4;
+  }
+  .marker-num {
+    background: #2d5738;
+    color: white;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    border: 3px solid #f5f1e6;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  }
+  .marker-peak {
+    background: #c0392b;
+  }
+  .leaflet-control-attribution {
+    font-size: 10px !important;
+  }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <h1>🏔️ Garibaldi della Lessinia</h1>
+  <p>Strada Bresciana, Verona → Breonio, via Valpolicella</p>
+  <div id="stats">
+    <div class="stat">Distanza<b>~28 km</b></div>
+    <div class="stat">Dislivello +<b>~1.150 m</b></div>
+    <div class="stat">Tempo<b>7-8 ore</b></div>
+    <div class="stat">Quota max<b>1.150 m</b></div>
+  </div>
+</div>
+
+<div id="map"></div>
+
+<script>
+const stops = [
+  {
+    name: "Casa - Strada Bresciana 75",
+    lat: 45.446218, lng: 10.899294,
+    quota: "68 m", time: "08:00 (partenza)",
+    notes: "Partenza da casa. Tratto su strada verso Bussolengo (4,5 km).",
+    peak: false
+  },
+  {
+    name: "Bussolengo",
+    lat: 45.474841, lng: 10.847057,
+    quota: "65 m", time: "08:45",
+    notes: "Primo centro abitato. Sentieri verso Gargagnago (+215 m).",
+    peak: false
+  },
+  {
+    name: "Gargagnago",
+    lat: 45.523208, lng: 10.867012,
+    quota: "280 m", time: "10:15",
+    notes: "Paese di montagna. Inizio salita verso San Giorgio (+250 m).",
+    peak: false
+  },
+  {
+    name: "San Giorgio di Valpolicella",
+    lat: 45.534736, lng: 10.849613,
+    quota: "430 m", time: "11:45",
+    notes: "Borgo storico nella valle del vino. Vista sui vigneti della Valpolicella. Verso Monte Solane (+470 m).",
+    peak: false
+  },
+  {
+    name: "Monte Solane",
+    lat: 45.565, lng: 10.88,
+    quota: "900 m", time: "13:15",
+    notes: "Panorama a 360°: Dolomiti, Garda, pianura veneta. Verso Cavalo (+80 m).",
+    peak: false
+  },
+  {
+    name: "Cavalo",
+    lat: 45.585, lng: 10.87,
+    quota: "980 m", time: "14:00",
+    notes: "Punto di passaggio sul crinale. Vista sul Lago di Garda. Verso Monte Pastello (+170 m).",
+    peak: false
+  },
+  {
+    name: "Monte Pastello ⭐",
+    lat: 45.585833, lng: 10.867222,
+    quota: "1.150 m", time: "14:45",
+    notes: "VETTA PRINCIPALE. Croce in cima. Pausa pranzo consigliata (30-60 min). Discesa verso Forte Masua (-100 m).",
+    peak: true
+  },
+  {
+    name: "Forte Masua",
+    lat: 45.597134, lng: 10.883385,
+    quota: "1.050 m", time: "16:00",
+    notes: "Opera fortificata storica della WWI. Verso Monte Pastelletto (quasi pianeggiante).",
+    peak: false
+  },
+  {
+    name: "Monte Pastelletto",
+    lat: 45.61, lng: 10.895,
+    quota: "1.040 m", time: "16:35",
+    notes: "Ultimo tratto panoramico sul crinale. Discesa finale verso Breonio (-240 m).",
+    peak: false
+  },
+  {
+    name: "Breonio 🎯",
+    lat: 45.623874, lng: 10.903341,
+    quota: "800 m", time: "18:00 (arrivo)",
+    notes: "META FINALE. Frazione di Fumane. Fine del Garibaldi.",
+    peak: true
+  }
+];
+
+const map = L.map('map', { zoomControl: true }).setView([45.55, 10.88], 12);
+
+L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+  maxZoom: 17,
+  attribution: 'Map data: © OpenStreetMap contributors, SRTM | Map style: © OpenTopoMap (CC-BY-SA)'
+}).addTo(map);
+
+const routeCoords = stops.map(s => [s.lat, s.lng]);
+
+const routeLine = L.polyline(routeCoords, {
+  color: '#c0392b',
+  weight: 4,
+  opacity: 0.85,
+  dashArray: '8, 6',
+  lineJoin: 'round'
+}).addTo(map);
+
+stops.forEach((stop, i) => {
+  const iconHtml = `<div class="marker-num ${stop.peak ? 'marker-peak' : ''}">${i + 1}</div>`;
+  const icon = L.divIcon({
+    html: iconHtml,
+    className: '',
+    iconSize: [30, 30],
+    iconAnchor: [15, 15]
+  });
+
+  const popupContent = `
+    <div class="popup-title">${i + 1}. ${stop.name}</div>
+    <span class="popup-quota">⛰️ ${stop.quota}</span>
+    <div class="popup-time">🕒 ${stop.time}</div>
+    <div class="popup-notes">${stop.notes}</div>
+  `;
+
+  L.marker([stop.lat, stop.lng], { icon: icon })
+    .addTo(map)
+    .bindPopup(popupContent);
+});
+
+map.fitBounds(routeLine.getBounds(), { padding: [40, 40] });
+</script>
+
+</body>
+</html>
