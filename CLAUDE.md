@@ -20,8 +20,8 @@ When verifying a route change, **hard-reload** (Ctrl+F5) — a cached `index.htm
 
 Everything lives in `index.html`, in three `<script>` blocks that **must stay in this order**:
 
-1. **`TRACK`** — the generated route: `[lon, lat, quota_m]` × 1432. Marked as generated; do not hand-edit.
-2. **`stops`** — the 11 waypoints: name, coordinates, time, notes, `kind`. Purely descriptive metadata.
+1. **`TRACK`** — the generated route: `[lon, lat, quota_m]` × 1444. Marked as generated; do not hand-edit.
+2. **`stops`** — the 13 waypoints: name, coordinates, time, notes, `kind`. Purely descriptive metadata.
 3. **Main logic** — everything else.
 
 ### The key data relationship
@@ -64,7 +64,7 @@ Hand-built SVG (no charting library — `leaflet-elevation` would pull in d3 for
 Routing uses **BRouter** (`hiking-beta` profile) — public, no API key, and it returns elevation inside the coordinates, so no separate elevation API is needed.
 
 ```bash
-LL="10.899294,45.446218|10.847057,45.474841|10.867012,45.523208|10.849613,45.534736|10.8562451,45.5459113|10.8710519,45.5698093|10.8664438,45.5844161|10.883385,45.597134|10.8906472,45.6157991|10.8977744,45.6248394|10.903341,45.623874"
+LL="10.899294,45.446218|10.847057,45.474841|10.8462463,45.4812669|10.8425401,45.5046882|10.867012,45.523208|10.849613,45.534736|10.8562451,45.5459113|10.8710519,45.5698093|10.8664438,45.5844161|10.883385,45.597134|10.8906472,45.6157991|10.8977744,45.6248394|10.903341,45.623874"
 
 curl -s "https://brouter.de/brouter?lonlats=${LL}&profile=hiking-beta&alternativeidx=0&format=geojson" -o br.json
 
@@ -78,7 +78,7 @@ grep -oE '\[10\.[0-9]+, 45\.[0-9]+, [0-9.]+\]' br.json | tr -d '[]' \
 
 **The `$` in `sed '$ s/,$//'` is load-bearing**: it strips the trailing comma from the last line only. Without it every line loses its comma and the array silently becomes `][` — a syntax error.
 
-`TOTAL_TIME` (28741 s) is BRouter's `total-time` and is **hardcoded** — update it when regenerating. Remaining time is apportioned by `effort = distance + 8 × ascent`, which keeps steep sections from reading as fast as flat ones. The same model generates the per-waypoint `time` values (plus a 45 min lunch stop from Monte Pastello onward).
+`TOTAL_TIME` (29326 s) is BRouter's `total-time` and is **hardcoded** — update it when regenerating. Remaining time is apportioned by `effort = distance + 8 × ascent`, which keeps steep sections from reading as fast as flat ones. The same model generates the per-waypoint `time` values (plus a 45 min lunch stop from Monte Pastello onward).
 
 Rounding to 5 decimals costs well under 0.1% of total distance and saves ~40% of the file size.
 
@@ -86,14 +86,16 @@ Rounding to 5 decimals costs well under 0.1% of total distance and saves ~40% of
 
 | | |
 |---|---|
-| Distanza | 34,2 km |
-| Dislivello + | 1.380 m |
-| Discesa − | 625 m |
-| Tempo | ~7h59 |
+| Distanza | 34,9 km |
+| Dislivello + | 1.395 m |
+| Discesa − | 640 m |
+| Tempo | ~8h09 |
 | Quota | 79 → 1.119 m (Monte Pastello) |
-| Tappe | 11 |
+| Tappe | 13 |
 
-Sanity check that must always hold: `salita − discesa = quota finale − quota iniziale` (1.380 − 625 = 755 = 849 − 95).
+Sanity check that must always hold: `salita − discesa = quota finale − quota iniziale` (1.395 − 640 = 755 = 849 − 95).
+
+Bussolengo → Gargagnago passa deliberatamente per **Arcè** e **Ospedaletto** (frazioni di Pescantina), su richiesta esplicita — non è il tragitto più breve secondo BRouter (+700 m, +10 min rispetto al diretto), ma riflette una preferenza locale sul percorso da seguire realmente a piedi. Non "correggere" questo tratto verso l'opzione più breve senza chiedere.
 
 ### Waypoint coordinates are authoritative
 
