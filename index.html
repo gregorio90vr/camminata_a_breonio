@@ -568,7 +568,7 @@ for (let i = 1; i < N; i++) {
     haversine(TRACK[i - 1][0], TRACK[i - 1][1], TRACK[i][0], TRACK[i][1]);
 }
 const TOTAL_DIST = cumDist[N - 1];
-
+ 
 // Quota lisciata (media mobile +/-4): toglie il rumore SRTM che
 // gonfierebbe il dislivello. Serve SOLO per il calcolo del dislivello.
 const SMOOTH = 4;
